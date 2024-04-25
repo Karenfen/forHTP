@@ -1,0 +1,45 @@
+RRC DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+RRCConnectionRequest ::= SEQUENCE {
+    criticalExtensions CHOICE {
+        rrcConnectionRequest-r8 RRCConnectionRequest-r8-IEs,
+        criticalExtensionsFuture SEQUENCE {}
+    }
+}
+
+RRCConnectionRequest-r8-IEs ::= SEQUENCE {
+    ue-Identity InitialUE-Identity,
+    establishmentCause EstablishmentCause,
+    spare BIT STRING (SIZE (1))
+}
+
+InitialUE-Identity ::= CHOICE {
+    s-TMSI S-TMSI,
+    randomValue BIT STRING (SIZE (40))
+}
+
+EstablishmentCause ::= ENUMERATED {
+    emergency, highPriorityAccess, mt-Access, mo-Signalling,
+    mo-Data, delayTolerantAccess-v1020, spare2, spare1
+}
+
+S-TMSI ::= SEQUENCE {
+    mmec MMEC,
+    m-TMSI BIT STRING (SIZE (32))
+}
+
+MMEC ::= BIT STRING (SIZE (8))
+
+RRCConnectionSetup ::= SEQUENCE {
+    rrc-TransactionIdentifier RRC-TransactionIdentifier,
+    radioResourceConfigDedicated RadioResourceConfigDedicated
+}
+
+RRC-TransactionIdentifier ::= INTEGER (0..3)
+
+RadioResourceConfigDedicated ::= SEQUENCE {
+    srb-Identity INTEGER (1..2),
+    eps-BearerIdentity INTEGER (0..15) OPTIONAL -- Cond DRB-Setup
+}
+
+END
