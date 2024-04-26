@@ -21,7 +21,7 @@ int main() {
     sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
 
     if (sockfd == -1) {
-        perror("socket");
+        perror("Socket");
         exit(EXIT_FAILURE);
     }
 
@@ -32,14 +32,14 @@ int main() {
 
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1) 
     {
-        perror("connect");
+        perror("Connect");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
 
     if (sctp_sendmsg(sockfd, (void *)request, request_len, NULL, 0, 0, 0, 0, 0, 0) == -1) 
     {
-        perror("sctp_sendmsg");
+        perror("SCTP send message");
         close(sockfd);
         exit(EXIT_FAILURE);
     }

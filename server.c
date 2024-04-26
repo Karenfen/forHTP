@@ -6,23 +6,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "asn1.h"
 
 #define PORT 55665
 
+void HandleConnectionInNewThread(void *socket);
+void* HandleConnection(void *socket);
+
 int main() {
-    int sock, listener;
+    int listener;
     struct sockaddr_in addr;
-    char buf[buf_max_size];
-    size_t bytes_received;
-    uint8_t *response;
-    ssize_t response_len;
 
     listener = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
 
     if (listener < 0) 
     {
-        perror("socket");
+        perror("Socket");
         exit(EXIT_FAILURE);
     }
     
@@ -32,57 +32,81 @@ int main() {
 
     if (bind(listener, (struct sockaddr *)&addr, sizeof(addr)) < 0) 
     {
-        perror("bind");
+        perror("Bind");
         close(listener);
         exit(EXIT_FAILURE);
     }
 
     if (listen(listener, 1) == -1) {
-        perror("listen");
+        perror("Listen");
         close(listener);
         exit(EXIT_FAILURE);
     }
     
     while (true) 
     {
-        sock = accept(listener, NULL, NULL);
+        int sock = accept(listener, NULL, NULL);
 
         if (sock < 0) 
         {
-            perror("accept");
-            close(listener);
-            exit(EXIT_FAILURE);
+            perror("Accept");
+            continue;
         }
 
-        bytes_received = sctp_recvmsg(sock, buf, buf_max_size, NULL, 0, NULL, NULL);
-
-        if (bytes_received > 0)
-        {        
-            RRCConnectionRequest_t *rrc_request = NULL;
-            
-            if(RRCConnectionRequestDecoder(rrc_request, buf, bytes_received))
-            {
-                printf("RRC Connection Request decoded\n");
-                RRCConnectionCompleteCoder(&response, &response_len);
-
-                if(sctp_sendmsg(sock, (void *)response, response_len, NULL, 0, 0, 0, 0, 0, 0) > 0)
-                {
-                    printf("Send answer\n");
-                }
-                else
-                {
-                    perror("send answer");
-                }
-            }
-            else
-            {
-                printf("RRC Connection Request decod ERROR!\n");
-            }
-        }
-        close(sock);
+        HandleConnectionInNewThread((void*)&sock);
     }
     
     close(listener);
     
     return 0;
+}
+
+void HandleConnectionInNewThread(void *socket)
+{
+    pthread_t thread;
+
+    if(pthread_create(&thread, NULL, HandleConnection, socket) != 0) {
+        perror("Pthread create");
+        close(*(int*)socket);
+    }
+    else
+    {
+        pthread_detach(thread);
+    }
+}
+
+void* HandleConnection(void *sock)
+{
+    int socket = *(int*)sock;
+    size_t bytes_received;
+    char buf[buf_max_size];
+    uint8_t *response;
+    ssize_t response_len;
+
+    bytes_received = sctp_recvmsg(socket, buf, buf_max_size, NULL, 0, NULL, NULL);
+
+    if (bytes_received > 0)
+    {        
+        RRCConnectionRequest_t *rrc_request = NULL;
+        
+        if(RRCConnectionRequestDecoder(rrc_request, buf, bytes_received))
+        {
+            printf("RRC Connection Request decoded\n");
+            RRCConnectionCompleteCoder(&response, &response_len);
+            sleep(5);
+            if(sctp_sendmsg(socket, (void *)response, response_len, NULL, 0, 0, 0, 0, 0, 0) > 0)
+            {
+                printf("Send answer\n");
+            }
+            else
+            {
+                perror("Send answer");
+            }
+        }
+        else
+        {
+            perror("RRC Connection Request decod");
+        }
+    }
+    close(socket);
 }

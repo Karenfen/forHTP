@@ -4,7 +4,7 @@
 void RRCConnectionRequestCoder(uint8_t **buffer, ssize_t *len)
 {
     RRCConnectionRequest_t rrcc_request;
-    int ue_id = GetRandomNumber(0, 100000);
+    int ue_id = rand();
 
     // set RRC connection request
     memset(&rrcc_request, 0, sizeof(rrcc_request));
@@ -22,10 +22,10 @@ void RRCConnectionRequestCoder(uint8_t **buffer, ssize_t *len)
     *len = res.result.encoded;
 
     if (*buffer == NULL) {
-        fprintf(stderr, "Error enconing RRC Connect Request\n");
+        perror("Enconing RRC Connect Request");
         exit(1);
     } else {
-        fprintf(stderr, "Encoded RRC Connect Request\n");
+        printf("Encoded RRC Connect Request\n");
     }
 
 }
@@ -68,10 +68,10 @@ void RRCConnectionCompleteCoder(uint8_t **buffer, ssize_t *len)
     *len = res.result.encoded;
 
     if (*buffer == NULL) {
-        fprintf(stderr, "Error enconing RRC Connect Setup\n");
+        perror("Enconing RRC Connect Setup");
         exit(1);
     } else {
-        fprintf(stderr, "RRC Connect Setup\n");
+        printf("RRC Connect Setup\n");
     }
 }
 
